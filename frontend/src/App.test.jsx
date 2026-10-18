@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App.jsx';
@@ -52,5 +52,17 @@ describe('IncidentFlow UI', () => {
     expect(screen.getByText('Description is required.')).toBeInTheDocument();
     expect(screen.getByText('Select a severity.')).toBeInTheDocument();
     expect(fetchMock.mock.calls.some(([, opts]) => opts?.method === 'POST')).toBe(false);
+  });
+
+  it('Clear resets search and all other filters', async () => {
+    const fetchMock = mockFetch({ '/api/team-members': [], '/api/incidents': [] });
+    renderAt('/incidents?q=disk&status=Open&severity=High');
+    fireEvent.click(await screen.findByRole('button', { name: 'Clear' }));
+    await act(() => new Promise((r) => setTimeout(r, 400)));
+    expect(screen.getByLabelText('Status')).toHaveValue('');
+    expect(screen.getByLabelText('Severity')).toHaveValue('');
+    expect(screen.getByLabelText('Search')).toHaveValue('');
+    const incidentCalls = fetchMock.mock.calls.map(([u]) => u).filter((u) => u.startsWith('/api/incidents'));
+    expect(incidentCalls.at(-1)).toBe('/api/incidents');
   });
 });

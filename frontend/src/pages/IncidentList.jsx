@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, formatDate, SEVERITIES, STATUSES } from '../api.js';
 import { EmptyState, ErrorMessage, Loading, SeverityBadge, StatusBadge } from '../components.jsx';
@@ -16,8 +16,12 @@ export default function IncidentList() {
     [filters.q, filters.status, filters.severity, filters.assignee_id],
   );
 
+  // Latest params for the debounced search, which may fire after other filters changed.
+  const paramsRef = useRef(searchParams);
+  paramsRef.current = searchParams;
+
   const setFilter = (key, value) => {
-    const next = new URLSearchParams(searchParams);
+    const next = new URLSearchParams(paramsRef.current);
     if (value) next.set(key, value);
     else next.delete(key);
     setSearchParams(next, { replace: true });
@@ -25,7 +29,9 @@ export default function IncidentList() {
 
   useEffect(() => {
     if (search === filters.q) return undefined;
-    const timer = setTimeout(() => setFilter('q', search.trim()), 300);
+    const timer = setTimeout(() => {
+      if (search.trim() !== (paramsRef.current.get('q') || '')) setFilter('q', search.trim());
+    }, 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
