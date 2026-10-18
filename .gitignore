@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Local databases
+*.db
+*.sqlite3
+
+# Node / Vite
+node_modules/
+dist/
+
+# Misc
+.env
+.DS_Store
+*.log
